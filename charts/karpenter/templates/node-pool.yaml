@@ -1,0 +1,52 @@
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: truemark-arm64
+spec:
+  disruption:
+    budgets:
+      - nodes: 10%
+    consolidationPolicy: WhenUnderutilized
+    expireAfter: {{ .Values.karpenter.nodepool.default.expireAfter }}
+  template:
+    spec:
+      nodeClassRef:
+        name: truemark
+      taints:
+        - key: karpenter.sh/nodepool
+          value: "truemark-arm64"
+          effect: NoSchedule
+      requirements:
+        {{- toYaml .Values.karpenter.nodePools.arm.requirements | nindent 8 }}
+  disruption:
+    expireAfter: {{ .Values.karpenter.nodepool.default.expireAfter }}
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 30s
+  weight: {{ .Values.karpenter.arm.nodePoolWeight }}
+---
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: truemark-amd64
+spec:
+  disruption:
+    budgets:
+      - nodes: 10%
+    consolidationPolicy: WhenUnderutilized
+    expireAfter: {{ .Values.karpenter.nodepool.default.expireAfter }}
+  template:
+    spec:
+      nodeClassRef:
+        name: truemark
+      taints:
+        - key: karpenter.sh/nodepool
+          value: "truemark-amd64"
+          effect: NoSchedule
+      requirements:
+        {{- toYaml .Values.karpenter.nodePools.amd.requirements | nindent 8 }}
+  disruption:
+    expireAfter: {{ .Values.karpenter.nodepool.default.expireAfter }}
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 30s
+  weight: {{ .Values.karpenter.amd.nodePoolWeight }}
+
