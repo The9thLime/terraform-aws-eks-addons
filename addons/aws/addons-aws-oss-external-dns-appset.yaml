@@ -50,7 +50,7 @@ spec:
               policy: {{default "upsert-only" .metadata.annotations.external_dns_policy}}
       destination:
         namespace: '{{.metadata.annotations.external_dns_namespace}}'
-        name: '{{.name}}'
+        name: '{{name}}'
       syncPolicy:
         automated: {}
         syncOptions:
