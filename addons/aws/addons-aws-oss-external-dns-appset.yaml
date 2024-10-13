@@ -19,24 +19,9 @@ spec:
                 addonChartRepository: https://kubernetes-sigs.github.io/external-dns
               selector:
                 matchExpressions:
-                  - key: akuity.io/argo-cd-cluster-name
-                    operator: NotIn
-                    values: [in-cluster]
                   - key: enable_external_dns
                     operator: In
                     values: ['true']
-          - clusters:
-              selector:
-                matchLabels:
-                  environment: staging
-              values:
-                addonChartVersion: 1.14.3
-          - clusters:
-              selector:
-                matchLabels:
-                  environment: prod
-              values:
-                addonChartVersion: 1.14.3
   template:
     metadata:
       name: 'addon-{{.name}}-{{.values.addonChart}}'
@@ -53,9 +38,7 @@ spec:
             releaseName: '{{.values.addonChart}}'
             ignoreMissingValueFiles: true
             valueFiles:
-              - $values/{{.metadata.annotations.addons_repo_basepath}}/charts/addons/{{.values.addonChart}}/values.yaml
-              - $values/{{.metadata.annotations.addons_repo_basepath}}/environments/{{.metadata.labels.environment}}/addons/{{.values.addonChart}}/values.yaml
-              - $values/{{.metadata.annotations.addons_repo_basepath}}/clusters/{{.name}}/addons/{{.values.addonChart}}/values.yaml
+              - $values/{{.metadata.annotations.addons_repo_basepath}}values/{{.values.addonChart}}/values.yaml
             values: |
               provider: aws
               serviceAccount:

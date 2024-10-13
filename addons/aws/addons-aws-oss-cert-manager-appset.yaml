@@ -13,31 +13,15 @@ spec:
           - clusters:
               values:
                 addonChart: cert-manager
-                # anything not staging or prod use this version
                 addonChartVersion: v1.14.3
                 addonChartRepository: https://charts.jetstack.io
               selector:
                 matchExpressions:
-                  - key: akuity.io/argo-cd-cluster-name
-                    operator: NotIn
-                    values: [in-cluster]
                   - key: enable_cert_manager
                     operator: In
                     values: ['true']
                   - key: aws_cluster_name
                     operator: Exists
-          - clusters:
-              selector:
-                matchLabels:
-                  environment: staging
-              values:
-                addonChartVersion: v1.14.3
-          - clusters:
-              selector:
-                matchLabels:
-                  environment: prod
-              values:
-                addonChartVersion: v1.14.3
   template:
     metadata:
       name: addon-{{name}}-{{values.addonChart}}
@@ -54,11 +38,15 @@ spec:
             releaseName: '{{values.addonChart}}'
             ignoreMissingValueFiles: true
             valueFiles:
-              - $values/{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/values.yaml
-              - $values/{{metadata.annotations.addons_repo_basepath}}environments/{{metadata.labels.environment}}/addons/{{values.addonChart}}/values.yaml
-              - $values/{{metadata.annotations.addons_repo_basepath}}clusters/{{name}}/addons/{{values.addonChart}}/values.yaml
+              - $values/{{metadata.annotations.addons_repo_basepath}}values/{{values.addonChart}}/values.yaml
             values: |
-              installCRDs: true
+              {{- if ge (split .Values.certManagerChartVersion "." | index 1 | int) 15 }}
+              crds:
+                enabled: true
+                keep: true
+              {{- else }}
+              installCRDS: true
+              {{- end }}
               serviceAccount:
                 name: {{metadata.annotations.cert_manager_service_account}}
                 annotations:
