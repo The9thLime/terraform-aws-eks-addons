@@ -1,1 +1,33 @@
-# Helm chart values
+dns01RecursiveNameserversOnly: false
+dns01RecursiveNameservers: "8.8.8.8:53,1.1.1.1:53"
+nodeSelector:
+  CriticalAddonsOnly: "true"
+tolerations:
+  - key: "CriticalAddonsOnly"
+    operator: "Equal"
+    effect: "NoSchedule"
+    value: "true"
+startupapicheck:
+  nodeSelector:
+    CriticalAddonsOnly: "true"
+  tolerations:
+    - key: "CriticalAddonsOnly"
+      operator: "Equal"
+      effect: "NoSchedule"
+      value: "true"
+cainjector:
+  nodeSelector:
+    CriticalAddonsOnly: "true"
+  tolerations:
+    - key: "CriticalAddonsOnly"
+      operator: "Equal"
+      effect: "NoSchedule"
+      value: "true"
+webhook:
+  nodeSelector:
+    CriticalAddonsOnly: "true"
+  tolerations:
+    - key: "CriticalAddonsOnly"
+      operator: "Equal"
+      effect: "NoSchedule"
+      value: "true
