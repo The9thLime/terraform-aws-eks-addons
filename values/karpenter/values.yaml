@@ -1,1 +1,70 @@
-# Helm chart values
+controllerVersion: "0.37.0"  # Version of Karpenter to install
+crdsVersion: "0.37.0"         # Version of Karpenter CRDs to install
+settings:
+  featureGates:
+    drift: true                # Enable or disable drift feature
+
+nodeTemplate:
+  subnetSelector:
+    network: "private"        # Subnet selector for the node template
+
+nodePools:
+  arm:
+    requirements:
+      - key: "karpenter.k8s.aws/instance-category"
+        operator: "In"
+        values: ["m", "c", "r"]
+      - key: "karpenter.k8s.aws/instance-cpu"
+        operator: "In"
+        values: ["4", "8", "16"]
+      - key: "karpenter.k8s.aws/instance-hypervisor"
+        operator: "In"
+        values: ["nitro"]
+      - key: "kubernetes.io/arch"
+        operator: "In"
+        values: ["arm64"]
+      - key: "karpenter.sh/capacity-type"
+        operator: "In"
+        values: ["on-demand"]
+    weight: 10                  # Weight of the ARM node pool
+
+  amd:
+    requirements:
+      - key: "karpenter.k8s.aws/instance-category"
+        operator: "In"
+        values: ["m", "c", "r"]
+      - key: "karpenter.k8s.aws/instance-cpu"
+        operator: "In"
+        values: ["4", "8", "16"]
+      - key: "karpenter.k8s.aws/instance-hypervisor"
+        operator: "In"
+        values: ["nitro"]
+      - key: "kubernetes.io/arch"
+        operator: "In"
+        values: ["amd64"]
+      - key: "karpenter.sh/capacity-type"
+        operator: "In"
+        values: ["on-demand"]
+    weight: 5                   # Weight of the AMD node pool
+
+nodepool:
+  default:
+    expireAfter: "720h"         # Time a Node can live before removal
+    ttlAfterEmpty: 300           # TTL for provisioned resources after being empty
+    ttlUntilExpired: 2592000     # TTL for provisioned resources until they expire
+
+nodeClass:
+  subnetSelector:
+    network: private
+  amiFamily: "Bottlerocket"    # Default AMI family
+  blockDeviceMappings:
+    - deviceName: "/dev/xvda"
+      ebs:
+        volumeSize: "30Gi"
+        volumeType: "gp3"
+        encrypted: true
+    - deviceName: "/dev/xvdb"
+      ebs:
+        volumeSize: "100Gi"
+        volumeType: "gp3"
+        encrypted: true
