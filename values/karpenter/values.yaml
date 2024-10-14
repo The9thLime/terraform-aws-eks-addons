@@ -1,15 +1,18 @@
-controllerVersion: "0.37.0"  # Version of Karpenter to install
-crdsVersion: "0.37.0"         # Version of Karpenter CRDs to install
 settings:
   featureGates:
     drift: true                # Enable or disable drift feature
-
-nodeTemplate:
-  subnetSelector:
-    network: "private"        # Subnet selector for the node template
-
-nodePools:
+nodePool:
+  default:
+    ttlAfterEmpty: 300           # TTL for provisioned resources after being empty
+    ttlUntilExpired: 2592000     # TTL for provisioned resources until they expire
   arm:
+    name: truemark-arm64
+    disruption:
+      budgets:
+        - nodes: 10%
+      consolidationPolicy: WhenUnderutilized
+      expireAfter: "720h"
+      consolidateAfter: 30s
     requirements:
       - key: "karpenter.k8s.aws/instance-category"
         operator: "In"
@@ -27,8 +30,18 @@ nodePools:
         operator: "In"
         values: ["on-demand"]
     weight: 10                  # Weight of the ARM node pool
-
+    taints:
+      - key: karpenter.sh/nodepool
+        value: "truemark-arm64"
+        effect: NoSchedule
   amd:
+    name: truemark-amd64
+    disruption:
+      budgets:
+        - nodes: 10%
+      consolidationPolicy: WhenUnderutilized
+      expireAfter: "720h"
+      consolidateAfter: 30s
     requirements:
       - key: "karpenter.k8s.aws/instance-category"
         operator: "In"
@@ -45,15 +58,14 @@ nodePools:
       - key: "karpenter.sh/capacity-type"
         operator: "In"
         values: ["on-demand"]
+    taints:
+      - key: karpenter.sh/nodepool
+        value: "truemark-amd64"
+        effect: NoSchedule
     weight: 5                   # Weight of the AMD node pool
 
-nodepool:
-  default:
-    expireAfter: "720h"         # Time a Node can live before removal
-    ttlAfterEmpty: 300           # TTL for provisioned resources after being empty
-    ttlUntilExpired: 2592000     # TTL for provisioned resources until they expire
-
 nodeClass:
+  name: truemark
   subnetSelector:
     network: private
   amiFamily: "Bottlerocket"    # Default AMI family
@@ -68,3 +80,12 @@ nodeClass:
         volumeSize: "100Gi"
         volumeType: "gp3"
         encrypted: true
+
+#########################################################
+# Karpenter CRDs
+#########################################################
+webhook:
+  enabled: true
+  serviceName: karpenter
+  serviceNamespace: ""
+  port: 8443

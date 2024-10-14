@@ -1,52 +1,35 @@
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
 metadata:
-  name: truemark-arm64
+  name: {{ .Values.nodePool.arm.name}}
 spec:
-  disruption:
-    budgets:
-      - nodes: 10%
-    consolidationPolicy: WhenUnderutilized
-    expireAfter: {{ .Values.karpenter.nodepool.default.expireAfter }}
   template:
     spec:
       nodeClassRef:
-        name: truemark
+        name: {{ .Values.nodeClass.name}}
       taints:
-        - key: karpenter.sh/nodepool
-          value: "truemark-arm64"
-          effect: NoSchedule
+        {{- toYaml .Values.nodePool.arm.taints | nindent 8}}
       requirements:
-        {{- toYaml .Values.karpenter.nodePools.arm.requirements | nindent 8 }}
+        {{- toYaml .Values.nodePool.arm.requirements | nindent 8 }}
   disruption:
-    expireAfter: {{ .Values.karpenter.nodepool.default.expireAfter }}
-    consolidationPolicy: WhenEmpty
-    consolidateAfter: 30s
-  weight: {{ .Values.karpenter.arm.nodePoolWeight }}
+    {{- toYaml .Values.nodePool.amd.disruption | nindent 6}}
+  weight: {{ .Values.nodePool.arm.weight }}
+
 ---
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
 metadata:
-  name: truemark-amd64
+  name: {{ .Values.nodePool.amd.name}}
 spec:
-  disruption:
-    budgets:
-      - nodes: 10%
-    consolidationPolicy: WhenUnderutilized
-    expireAfter: {{ .Values.karpenter.nodepool.default.expireAfter }}
   template:
     spec:
       nodeClassRef:
-        name: truemark
+        name: {{ .Values.nodeClass.name}}
       taints:
-        - key: karpenter.sh/nodepool
-          value: "truemark-amd64"
-          effect: NoSchedule
+        {{- toYaml .Values.nodePool.arm.taints | nindent 8}}
       requirements:
-        {{- toYaml .Values.karpenter.nodePools.amd.requirements | nindent 8 }}
+        {{- toYaml .Values.nodePool.amd.requirements | nindent 8 }}
   disruption:
-    expireAfter: {{ .Values.karpenter.nodepool.default.expireAfter }}
-    consolidationPolicy: WhenEmpty
-    consolidateAfter: 30s
-  weight: {{ .Values.karpenter.amd.nodePoolWeight }}
+    {{- toYaml .Values.nodePool.amd.disruption | nindent 6}}
+  weight: {{ .Values.nodePool.amd.weight }}
 

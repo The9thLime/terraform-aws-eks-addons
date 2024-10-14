@@ -7,38 +7,74 @@ spec:
   syncPolicy:
     preserveResourcesOnDeletion: true
   generators:
-    - merge:
-        mergeKeys: [server]
-        generators:
-          - clusters:
-              values:
-                addonChart: karpenter
-                addonChartReleaseName: karpenter
-                addonChartNamespace: karpenter
-                addonChartVersion: v0.34.1
-                # using oci repostory already configure in argocd
-                # argocd repo add public.ecr.aws --type helm --name aws-public-ecr --enable-oci
-                addonChartRepository: public.ecr.aws
-              selector:
-                matchExpressions:
-                  - key: enable_karpenter
-                    operator: In
-                    values: ['true']
+    - clusters:
+        values:
+          addonChart: karpenter
+          addonChartReleaseName: karpenter
+          addonChartNamespace: karpenter
+          addonChartVersion: v0.34.1
+          # using oci repository already configure in argocd
+          # argocd repo add public.ecr.aws --type helm --name aws-public-ecr --enable-oci
+          addonChartRepository: public.ecr.aws
+        selector:
+          matchExpressions:
+            - key: enable_karpenter
+              operator: In
+              values: ['true']
+    - clusters:
+        values:
+          addonChart: karpenter-crd
+          addonChartReleaseName: karpenter-crd
+          addonChartNamespace: karpenter
+          addonChartVersion: v0.34.1
+          # using oci repository already configure in argocd
+          # argocd repo add public.ecr.aws --type helm --name aws-public-ecr --enable-oci
+          addonChartRepository: public.ecr.aws
+        selector:
+          matchExpressions:
+            - key: enable_karpenter
+              operator: In
+              values: ['true']
+    - clusters:
+        values:
+          addonChart: karpenter-resources
+          addonChartReleaseName: karpenter-crd
+          addonChartNamespace: karpenter
+          addonChartVersion: v0.34.1
+          # using oci repository already configure in argocd
+          # argocd repo add public.ecr.aws --type helm --name aws-public-ecr --enable-oci
+          addonChartRepository: public.ecr.aws
+        selector:
+          matchExpressions:
+            - key: enable_karpenter
+              operator: In
+              values: [ 'true' ]
   template:
     metadata:
       name: addon-{{name}}-{{values.addonChart}}
     spec:
       project: default
+      # Multiples sources to install resources, CRDs, and the main Helm chart
       sources:
+        # For values
         - repoURL: '{{metadata.annotations.addons_repo_url}}'
           targetRevision: '{{metadata.annotations.addons_repo_revision}}'
           ref: values
-        - repoURL: '{{metadata.annotation.addons_repo_url}}'
+        # For Karpenter CRDs
+        - repoURL: '{{values.addonChartRepository}}'
+          targetRevision: '{{values.addonChartVersion}}'
+          chart: karpenter-crd
+          helm:
+            valueFiles:
+              - $values/{{metadata.annotations.addons_repo_basepath}}values/{{values.addonChart}}/values.yaml
+        # For custom nodePools and nodeClasses
+        - repoURL: '{{metadata.annotations.addons_repo_url}}/{{metadata.annotations.addons_repo_basepath}}charts/{{values.addonChart}}'
           targetRevision: HEAD
           chart: karpenter-resources
           helm:
             - valueFiles:
                 - $values/{{metadata.annotations.addons_repo_basepath}}values/{{values.addonChart}}/values.yaml
+        # For Karpenter itself
         - chart: '{{values.addonChartRepositoryNamespace}}/{{values.addonChart}}'
           repoURL: '{{values.addonChartRepository}}'
           targetRevision: '{{values.addonChartVersion}}'
@@ -50,8 +86,7 @@ spec:
             values: |
               nodeClass:
                 role: {{metadata.annotations.karpeneter_node_iam_role_arn}}
-                name: {{metadata.annotations.aws_cluster_name}}-truemark-default
-              clusterName: {{metadata.annotations.aws_cluster_name}}
+                name: {{metadata.annotations.aws_cluster_name}}-truemark-defaul
               settings:
                 clusterName: {{metadata.annotations.aws_cluster_name}}
                 interruptionQueue: {{metadata.annotations.karpenter_sqs_queue_name}}

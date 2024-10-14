@@ -19,7 +19,7 @@ spec:
         {{- end }}
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: {{ .Values.clusterName }}
+        karpenter.sh/discovery: {{ .Values.settings.clusterName }}
   tags:
-    Name: {{ printf "%s-truemark-default" .Values.clusterName }}
-    karpenter.sh/discovery: {{ .Values.clusterName }}
+    Name: {{ printf "%s-truemark-default" .Values.settings.clusterName }}
+    karpenter.sh/discovery: {{ .Values.settings.clusterName }}
